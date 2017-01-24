@@ -739,7 +739,6 @@ class CNNModel(object):
 
   def _l1_loss(self):
     """L1 activation loss."""
-    # l1_reg_losses = tf.get_collection(L1_REG_KEY)
     if len(self.l1_collection) > 0:
       log.warning("L1 Regularizers {}".format(self.l1_collection))
       return tf.add_n(self.l1_collection)

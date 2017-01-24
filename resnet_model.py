@@ -30,15 +30,11 @@ from __future__ import (absolute_import, division, print_function,
 import nnlib as nn
 import numpy as np
 import tensorflow as tf
+
 from utils import logger
-
-from tensorflow.python.training import moving_averages
-
 from cnn_model import get_reg_act, get_bn_act, get_ln_act, get_dn_act
 
 log = logger.get()
-
-# L1_REG_KEY = "L1_REG"
 
 
 class ResNetModel(object):
@@ -209,7 +205,7 @@ class ResNetModel(object):
     # Regular activation function here for hack.
     reg_act_fn = get_reg_act(
         act=tf.nn.relu, l1_reg=0.0, l1_collection=self.l1_collection)
-    
+
     strides = config.strides
     activate_before_residual = config.activate_before_residual
     filters = config.filters
@@ -409,7 +405,6 @@ class ResNetModel(object):
 
   def _l1_loss(self):
     """L1 activation loss."""
-    # l1_reg_losses = tf.get_collection(L1_REG_KEY)
     if len(self.l1_collection) > 0:
       log.warning("L1 Regularizers {}".format(self.l1_collection))
       return tf.add_n(self.l1_collection)
