@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import tensorflow as tf
 
 
-def l1_loss(x, mean=0.0, alpha=1e-3):
+def l1_loss(x, x_mean=0.0, alpha=1e-3):
   """Returns L1 regularization loss on the activation.
     l1_loss = alpha * |x - x_mean|
 
