@@ -17,3 +17,5 @@ into "cifar-100".
 python run_cifar_exp.py --dataset {cifar-10/cifar-100} --model {MODEL} --verbose
 ```
 
+Replace MODEL with a pre-configured model name, e.g. "dn". For details, please
+take a look at cifar_exp_config.py.
