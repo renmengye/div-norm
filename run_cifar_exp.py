@@ -345,7 +345,7 @@ def train_model(config, environ, train_data, test_data, trainval_data=None):
     # Initializes variables.
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
       saver = tf.train.Saver()
-      sess.run(tf.global_variables_initilaizer())
+      sess.run(tf.global_variables_initializer())
 
       def train_step():
         """Train step."""
