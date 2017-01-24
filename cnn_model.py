@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from utils import logger
 from l1_reg import l1_loss
-from divnorm import div_norm_2d
+from div_norm import div_norm_2d
 from layer_norm import layer_norm
 from batch_norm import batch_norm, batch_norm_mean_only
 
