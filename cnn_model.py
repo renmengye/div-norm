@@ -34,7 +34,11 @@ def get_reg_act(act=tf.nn.relu, l1_reg=0.0, l1_collection=None):
     """
     if l1_reg > 0.0:
       l1_collection.append(l1_loss(x, alpha=l1_reg))
-    return act(x, name=name)
+
+    if act is not None:
+      return act(x, name=name)
+    else:
+      return x
 
   return _act
 
@@ -802,6 +806,223 @@ class CNNModel(object):
   def train_step(self, sess, inp, label):
     """Run training."""
     feed_data = {self.input: inp, self.label: label}
-    cost, ce, _ = sess.run([self.cost, self.cross_ent, self.train_op],
-                           feed_dict=feed_data)
+    cost, ce, _ = sess.run(
+        [self.cost, self.cross_ent, self.train_op], feed_dict=feed_data)
     return ce
+
+
+class CNNModelSR(CNNModel):
+
+  def __init__(self,
+               config,
+               is_training=True,
+               inference_only=False,
+               inp=None,
+               label=None):
+
+    self._config = config
+    self._is_training = is_training
+    self._l1_collection = []
+    self._num_cnn_layer = len(config.filter_size)
+
+    x = tf.placeholder(tf.float32, [None, None, None, None])
+    y = tf.placeholder(tf.float32, [None, None, None, None])
+    y_pred = self.build_inference_network(x)
+
+    self._input = x
+    self._label = y
+    self._output = y_pred
+
+    self._l2_loss = tf.reduce_mean((y_pred - y)**2.0) / 2.0
+    total_loss = self._l2_loss
+
+    # Regularization
+    total_loss += self._decay()
+    self._cost = total_loss
+
+    if not is_training or inference_only:
+      return
+
+    # Optimizer.
+    global_step = tf.Variable(
+        0.0, name="global_step", dtype=self.dtype(), trainable=False)
+    lr = tf.Variable(
+        0.0, name="learn_rate", dtype=self.dtype(), trainable=False)
+    opt = tf.train.MomentumOptimizer(learning_rate=lr, momentum=config.momentum)
+    train_step = opt.minimize(total_loss, global_step=global_step)
+
+    ### apply customized learning rate
+    # opt = tf.train.MomentumOptimizer(
+    #     learning_rate=learn_rate, momentum=config.momentum)
+    # grads_and_vars = opt.compute_gradients(total_loss)
+
+    # for ii in xrange(len(grads_and_vars)):
+    #     grad = grads_and_vars[ii][0]
+    #     var = grads_and_vars[ii][1]
+
+    #     # multiply learning rate of bias by 0.1
+    #     if 'b:0' in var.name:
+    #         grad *= 0.1
+    #         grads_and_vars[ii] = tuple((grad, var))
+
+    #     # multiply learning rate of last layer weight by 0.1
+    #     if var.name == 'CNN/layer_2/w:0':
+    #         grad *= 0.1
+    #         grads_and_vars[ii] = tuple((grad, var))
+
+    # train_step = opt.apply_gradients(grads_and_vars)
+
+    self._new_lr = tf.placeholder(
+        self.dtype(), shape=[], name="new_learning_rate")
+    self._lr = lr
+    self._lr_update = tf.assign(self._lr, self._new_lr)
+    self._train_op = train_step
+    self._global_step = global_step
+
+  def build_inference_network(self, x):
+    """Build inference part of the network."""
+    config = self.config
+    is_training = self.is_training
+
+    # Activation functions (combining normalization).
+    if config.norm_field == "batch":
+      log.info("Using batch normalization")
+      log.info("Setting sigma={:.3e}".format(config.sigma_init))
+      log.info("Setting sigma learnable={}".format(config.learn_sigma))
+      log.info("Setting L1={:.3e}".format(config.l1_reg))
+      conv_act_fn = [
+          get_bn_act(
+              act=get_tf_fn(aa),
+              is_training=is_training,
+              sigma_init=config.sigma_init,
+              affine=config.norm_affine,
+              l1_reg=config.l1_reg,
+              mask=config.bn_mask[ii],
+              l1_collection=self.l1_collection,
+              learn_sigma=config.learn_sigma,
+              dtype=self.dtype()) for ii, aa in enumerate(config.conv_act_fn)
+      ]
+    elif config.norm_field == "batch_ms":
+      log.info("Using mean subtracted batch normalization")
+      log.info("Setting L1={:.3e}".format(config.l1_reg))
+      conv_act_fn = [
+          get_bnms_act(
+              act=get_tf_fn(aa),
+              is_training=is_training,
+              affine=config.norm_affine,
+              l1_reg=config.l1_reg,
+              mask=config.bn_mask[ii],
+              l1_collection=self.l1_collection,
+              dtype=self.dtype()) for ii, aa in enumerate(config.conv_act_fn)
+      ]
+    elif config.norm_field == "layer":
+      log.info("Using layer normalization")
+      log.info("Setting sigma={:.3e}".format(config.sigma_init))
+      log.info("Setting sigma learnable={}".format(config.learn_sigma))
+      log.info("Setting L1={:.3e}".format(config.l1_reg))
+      conv_act_fn = [
+          get_ln_act(
+              act=get_tf_fn(aa),
+              sigma_init=config.sigma_init,
+              affine=config.norm_affine,
+              l1_reg=config.l1_reg,
+              l1_collection=self.l1_collection,
+              learn_sigma=config.learn_sigma,
+              dtype=self.dtype()) for ii, aa in enumerate(config.conv_act_fn)
+      ]
+    elif config.norm_field == "layer_ms":
+      log.info("Using mean subtracted layer normalization")
+      log.info("Setting L1={:.3e}".format(config.l1_reg))
+      conv_act_fn = [
+          get_lnms_act(
+              act=get_tf_fn(aa),
+              affine=config.norm_affine,
+              l1_reg=config.l1_reg,
+              l1_collection=self.l1_collection,
+              dtype=self.dtype()) for ii, aa in enumerate(config.conv_act_fn)
+      ]
+    elif config.norm_field == "div":
+      log.info("Using divisive normalization")
+      log.info("Setting sigma={:.3e}".format(config.sigma_init))
+      log.info("Setting sigma learnable={}".format(config.learn_sigma))
+      log.info("Setting L1={:.3e}".format(config.l1_reg))
+      conv_act_fn = [
+          get_dn_act(
+              sum_window=config.sum_window[ii],
+              sup_window=config.sup_window[ii],
+              act=get_tf_fn(aa),
+              sigma_init=config.sigma_init,
+              affine=config.norm_affine,
+              l1_reg=config.l1_reg,
+              l1_collection=self.l1_collection,
+              learn_sigma=config.learn_sigma,
+              dtype=self.dtype()) for ii, aa in enumerate(config.conv_act_fn)
+      ]
+    elif config.norm_field == "div_ms":
+      log.info("Using mean subtracted divisive normalization")
+      log.info("Setting L1={:.3e}".format(config.l1_reg))
+      conv_act_fn = [
+          get_dnms_act(
+              sum_window=config.sum_window[ii],
+              act=get_tf_fn(aa),
+              affine=config.norm_affine,
+              l1_reg=config.l1_reg,
+              l1_collection=self.l1_collection,
+              dtype=self.dtype()) for ii, aa in enumerate(config.conv_act_fn)
+      ]
+    elif config.norm_field == "no" or config.norm_field is None:
+      log.info("Not using normalization")
+      log.info("Setting L1={:.3e}".format(config.l1_reg))
+      conv_act_fn = [
+          get_reg_act(
+              get_tf_fn(aa),
+              l1_reg=config.l1_reg,
+              l1_collection=self.l1_collection) for aa in config.conv_act_fn
+      ]
+    else:
+      raise Exception("Unknown normalization \"{}\"".format(config.norm_field))
+
+    # Pooling functions.
+    pool_fn = [get_tf_fn(pp) for pp in config.pool_fn]
+
+    # CNN function.
+    cnn_fn = lambda x: nn.cnn(x, config.filter_size,
+                              strides=config.strides,
+                              pool_fn=pool_fn,
+                              pool_size=config.pool_size,
+                              pool_strides=config.pool_strides,
+                              act_fn=conv_act_fn,
+                              dtype=self.dtype(),
+                              add_bias=True,
+                              init_std=config.conv_init_std,
+                              init_method=config.conv_init_method,
+                              wd=config.wd,
+                              padding="VALID")
+
+    # Prediction model.
+    h = cnn_fn(x)
+    
+    return h
+
+  def assign_weight(self, weights):
+    all_variables = tf.global_variables()
+
+    var_dict = {}
+    for var in all_variables:
+      var_dict[var.name] = var
+
+    assign_ops = []
+    for ii in xrange(self._num_cnn_layer):
+      var_name = 'Model/cnn/layer_{:d}/w:0'.format(ii)
+      key_name = 'w_{:d}'.format(ii)
+      assign_ops += [tf.assign(var_dict[var_name], weights[key_name])]
+
+      var_name = 'Model/cnn/layer_{:d}/b:0'.format(ii)
+      key_name = 'b_{:d}'.format(ii)
+      assign_ops += [tf.assign(var_dict[var_name], weights[key_name])]
+
+    return tf.group(*assign_ops)
+
+  @property
+  def l2_loss(self):
+    return self._l2_loss

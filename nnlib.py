@@ -97,7 +97,8 @@ def cnn(x,
         init_std=None,
         init_method=None,
         scope="cnn",
-        trainable=True):
+        trainable=True,
+        padding="SAME"):
   """Builds a convolutional neural networks.
     Each layer contains the following operations:
         1) Convolution, y = w * x.
@@ -153,7 +154,7 @@ def cnn(x,
               name="b",
               trainable=trainable)
         h = tf.nn.conv2d(
-            h, w, strides=strides[ii], padding="SAME", name="conv")
+            h, w, strides=strides[ii], padding=padding, name="conv")
         if add_bias:
           h = tf.add(h, b, name="conv_bias")
         if act_fn[ii] is not None:
