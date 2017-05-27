@@ -51,13 +51,20 @@ def random_crop(hr_img, lr_img, num_per_img, patch_size, stride):
 
 class SRHDF5MatlabDataset():
 
-  def __init__(self, split, folder, num_patch=100, patch_size=33, stride=1):
+  def __init__(self,
+               split,
+               folder,
+               num_patch=100,
+               patch_size=33,
+               stride=1,
+               resize_factor=3):
     self.split = split
     self.num_patch = num_patch
     self.patch_size = patch_size
     self.stride = stride
 
-    self.h5_dict = h5py.File(os.path.join(folder, "data.h5"), "r")
+    self.h5_dict = h5py.File(
+        os.path.join(folder, "data_X{}.h5".format(resize_factor)), "r")
     self.train_hr_imgs = self.h5_dict["hr_img"]
     self.train_lr_imgs = self.h5_dict["lr_img"]
     self.test_hr_imgs = self.h5_dict["hr_img_test"]

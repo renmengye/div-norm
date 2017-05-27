@@ -2,14 +2,10 @@
 """
 Authors: Mengye Ren (mren@cs.toronto.edu) Renjie Liao (rjliao@cs.toronto.edu)
 
-The following code explores different normalization schemes in CNN on CIFAR
-datasets.
-
-Dependency:
-h5py, cv2
+The following code explores different normalization schemes for super-resolution.
 
 Usage:
-python run_cifar_exp.py    --model           [MODEL NAME]        \
+python run_sr_exp.py       --model           [MODEL NAME]        \
                            --config          [CONFIG FILE]       \
                            --env             [ENV FILE]          \
                            --dataset         [DATASET]           \
@@ -23,19 +19,8 @@ python run_cifar_exp.py    --model           [MODEL NAME]        \
 Flags:
     --model: Model type. Available options are:
          1) base
-         2) base-wd
-         3) base-drop
-         4) base-wd-drop
-         5) bn
-         6) bn-s
-         7) bn-l1
-         8) bn-star
-         9) ln
-        10) ln-s
-        11) ln-l1
-        12) ln-star
-        13) dn
-        14) dn-star
+         2) dnms
+         3) dn-star
     --config: Not using the pre-defined configs above, specify the JSON file
     that contains model configurations.
     --dataset: Dataset name. Available options are: 1) cifar-10 2) cifar-100.
@@ -86,7 +71,8 @@ def get_dataset(name,
                 split,
                 num_patch_per_img=100,
                 patch_size=33,
-                stride=1):
+                stride=1,
+                resize_factor=3):
   """Gets CIFAR datasets.
 
   Args:
@@ -103,7 +89,8 @@ def get_dataset(name,
         folder=folder,
         num_patch=num_patch_per_img,
         patch_size=patch_size,
-        stride=stride)
+        stride=stride,
+        resize_factor=resize_factor)
   else:
     raise Exception("Unknown dataset {}".format(name))
   return dp
@@ -424,7 +411,7 @@ def main():
   config = get_config()
   FLAGS.dataset = config.dataset
   environ = get_environ()
-  
+
   if environ.run_validation:
     train_str = "traintrain"
     test_str = "trainval"
@@ -440,14 +427,16 @@ def main():
       environ.data_folder,
       train_str,
       num_patch_per_img=config.num_patch_per_img,
-      patch_size=config.patch_size)
+      patch_size=config.patch_size,
+      resize_factor=int(config.resize_factor))
 
   test_data = get_dataset(
       environ.dataset,
       environ.data_folder,
       test_str,
       num_patch_per_img=config.num_patch_per_img,
-      patch_size=config.patch_size)
+      patch_size=config.patch_size,
+      resize_factor=int(config.resize_factor))
 
   # Trains a model.
   psnr, ssim = train_model(config, environ, train_data, test_data)
