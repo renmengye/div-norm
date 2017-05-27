@@ -10,7 +10,7 @@ Implementation of divisive normalization in TensorFlow
   - For CIFAR-100:
   Create a folder named "cifar-100" and move the uncompressed folder "cifar-100-py" into "cifar-100".
 
-- Run training and testing
+- Run training and testing:
   ```
   python run_cifar_exp.py --dataset {cifar-10/cifar-100} --model {MODEL} --verbose
   ```
@@ -27,5 +27,5 @@ Implementation of divisive normalization in TensorFlow
 * Run the following command to train and test the model. Please refer to the documentation in the beginning of file for more on the configurations.
 
   ```
-  python run_sr_exp.py --model dnms --data_folder sr_data --results results --verbose
+  python run_sr_exp.py --model dnms --data_folder sr_data --verbose
   ```

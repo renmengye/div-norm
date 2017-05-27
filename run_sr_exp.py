@@ -304,9 +304,6 @@ def train_model(config, environ, train_data, test_data, trainval_data=None):
             save_input_img = ut.crop_img(
                 ut.post_process(img_y * 255.0), crop_border)
             save_output_img = ut.post_process(output_img)
-
-            blank_margin = np.ones(
-                (save_input_img.shape[0], 20), dtype=np.uint8) * 255
           else:
             save_input_img = np.zeros_like(batch["img"])
             # note OpenCV format is Ycrcb
@@ -330,19 +327,15 @@ def train_model(config, environ, train_data, test_data, trainval_data=None):
             save_output_img = ut.post_process(
                 cv2.cvtColor(
                     save_output_img.astype(np.uint8), cv2.COLOR_YCR_CB2BGR))
-            blank_margin = np.ones(
-                (save_input_img.shape[0], 20, 3), dtype=np.uint8) * 255
-
-          save_img = np.concatenate(
-              [save_input_img, blank_margin, save_output_img], axis=1)
 
           cv2.imwrite(
               os.path.join(save_folder,
-                           "valid_res_{:05d}.png".format(count + 1)), save_img)
+                           "test_input_{:05d}.png".format(count + 1)),
+              save_input_img)
 
           cv2.imwrite(
               os.path.join(save_folder,
-                           "valid_img_{:05d}.png".format(count + 1)),
+                           "test_output_{:05d}.png".format(count + 1)),
               save_output_img)
 
           count += 1
