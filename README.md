@@ -27,7 +27,7 @@ take a look at cifar_exp_config.py.
 
 * Generate the training data by running ```gen_sr_data.m``` in Matlab (we used matlab's imresize function to generate training data which is named as, e.g., "data_X4.h5" in folder "sr_data"). You can easily modify the script to use your own training or testing data.
 
-* Run the following command to train and test the model. Please refer to the documentation of ```run_cifar_exp.py``` for more on the configurations.
+* Run the following command to train and test the model. Please refer to the documentation in the beginning of file for more on the configurations.
 
   ```
   python run_sr_exp.py --model dnms --data_folder sr_data --results results --verbose
