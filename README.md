@@ -23,12 +23,12 @@ take a look at cifar_exp_config.py.
 
 ## Super-resolution experiments
 
-* Download the datasets [Set5, Set14, BSD200](https://github.com/huangzehao/Super-Resolution.Benckmark). Create a folder named "sr_data" and put uncompressed datasets as subfolders in it. Note that the code depend on ```h5py```, ```cv2```.
+* Download the datasets [Set5, Set14, BSD200](https://github.com/huangzehao/Super-Resolution.Benckmark). Create a folder named "sr_data" and put uncompressed datasets as subfolders in it. Note that our code depend on ```h5py```, ```cv2```.
 
-* Generate the training data (e.g., named "data_X4.h5" in folder "sr_data") by running ```gen_sr_data.m``` in Matlab (we used matlab's imresize to generate training data). You can easily modify the script to use your own training or testing data.
+* Generate the training data by running ```gen_sr_data.m``` in Matlab (we used matlab's imresize function to generate training data which is named as, e.g., "data_X4.h5" in folder "sr_data"). You can easily modify the script to use your own training or testing data.
 
 * Run the following command to train and test the model. Please refer to the documentation of ```run_cifar_exp.py``` for more on the configurations.
 
-```
-python run_sr_exp.py --model dnms --data_folder sr_data --results results --verbose
-```
+  ```
+  python run_sr_exp.py --model dnms --data_folder sr_data --results results --verbose
+  ```
