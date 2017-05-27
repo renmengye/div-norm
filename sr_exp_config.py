@@ -9,6 +9,8 @@ from cifar_exp_config import BaselineConfig
 def get_config(dataset, model):
   if model == "base":
     config = BaselineSRConfig()
+  elif model == "dn":
+    config = DNConfig()
   elif model == "dnms":
     config = DNMSConfig()
   elif model == "dn-star":
@@ -58,6 +60,20 @@ class BaselineSRConfig(BaselineConfig):
     self.num_patch_per_img = 100
     self.dataset = "HDF5Matlab"
     self.crop_border = 8
+
+
+class DNConfig(BaselineSRConfig):
+
+  def __init__(self):
+    super(DNMSConfig, self).__init__()
+
+    self.l1_reg = 1.0e-1
+    self.sigma_init = 1.0
+    self.norm_field = "div"
+    self.sum_window = [[5, 5], [5, 5], None]
+    self.sup_window = None
+    self.norm_affine = False
+    self.model = "dn"
 
 
 class DNMSConfig(BaselineSRConfig):

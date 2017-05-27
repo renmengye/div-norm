@@ -27,5 +27,5 @@ Implementation of divisive normalization in TensorFlow
 * Run the following command to train and test the model. Please refer to the documentation in the beginning of file for more on the configurations.
 
   ```
-  python run_sr_exp.py --model dnms --data_folder sr_data --verbose
+  python run_sr_exp.py --model dn --data_folder sr_data --verbose
   ```
