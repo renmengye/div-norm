@@ -19,8 +19,9 @@ python run_sr_exp.py       --model           [MODEL NAME]        \
 Flags:
     --model: Model type. Available options are:
          1) base
-         2) dnms
-         3) dn-star
+         2) dn
+         3) dnms
+         4) dn-star
     --config: Not using the pre-defined configs above, specify the JSON file
     that contains model configurations.
     --dataset: Dataset name. Available options are: 1) cifar-10 2) cifar-100.
