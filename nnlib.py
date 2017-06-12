@@ -62,7 +62,7 @@ def weight_variable(shape,
         uniform=False, seed=1, dtype=dtype)
   else:
     raise ValueError("Non supported initialization method!")
-  log.info("Weight shape {}".format(shape))
+  #log.info("Weight shape {}".format(shape))
   if wd is not None:
     if wd > 0.0:
       reg = lambda x: tf.mul(tf.nn.l2_loss(x), wd)
@@ -248,3 +248,17 @@ def mlp(x,
             keep_prob = 1.0
           h = tf.nn.dropout(h, keep_prob=keep_prob)
   return h
+
+
+def concat(x, axis):
+  if tf.__version__.startswith("0"):
+    return tf.concat(axis, x)
+  else:
+    return tf.concat(x, axis=axis)
+
+
+def split(x, num, axis):
+  if tf.__version__.startswith("0"):
+    return tf.split(axis, num, x)
+  else:
+    return tf.split(x, num, axis)

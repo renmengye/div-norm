@@ -17,6 +17,12 @@ Implementation of divisive normalization in TensorFlow
 
   Replace MODEL with a pre-configured model name, e.g. "dn". For details, please take a look at cifar_exp_config.py.
 
+## PTB experiments
+- Run training and testing:
+  ```
+  python run_ptb_exp.py --model {MODEL} --verbose
+  ```
+  Replace MODEL with a pre-configured model name, see `run_ptb_exp.py` for details.
 
 ## Super-resolution experiments
 
